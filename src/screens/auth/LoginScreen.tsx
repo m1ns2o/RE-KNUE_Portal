@@ -17,19 +17,23 @@ import {
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
+import { useNavigation } from "@react-navigation/native";
+import { NavigationProps } from "../../types/navigation"; // 외부 타입 파일에서 가져오기
 
-const LoginScreen = () => {
+const LoginScreen: React.FC = () => {
 	const theme = useTheme();
-	const [studentId, setStudentId] = useState("");
-	const [password, setPassword] = useState("");
-	const [secureTextEntry, setSecureTextEntry] = useState(true);
-	const [studentIdError, setStudentIdError] = useState("");
-	const [passwordError, setPasswordError] = useState("");
-	const [isLoading, setIsLoading] = useState(false);
-	const [snackbarVisible, setSnackbarVisible] = useState(false);
-	const [snackbarMessage, setSnackbarMessage] = useState("");
+	const navigation = useNavigation<NavigationProps>();
+	const [studentId, setStudentId] = useState<string>("");
+	const [password, setPassword] = useState<string>("");
+	const [secureTextEntry, setSecureTextEntry] = useState<boolean>(true);
+	const [studentIdError, setStudentIdError] = useState<string>("");
+	const [passwordError, setPasswordError] = useState<string>("");
+	const [isLoading, setIsLoading] = useState<boolean>(false);
+	const [snackbarVisible, setSnackbarVisible] = useState<boolean>(false);
+	const [snackbarMessage, setSnackbarMessage] = useState<string>("");
 
-	const validateStudentId = () => {
+	const validateStudentId = (): boolean => {
 		// 학번 유효성 검사 - 숫자로만 구성되고 길이가 적절한지 확인
 		const studentIdRegex = /^\d{8}$/;
 		if (!studentId) {
@@ -43,7 +47,7 @@ const LoginScreen = () => {
 		return true;
 	};
 
-	const validatePassword = () => {
+	const validatePassword = (): boolean => {
 		if (!password) {
 			setPasswordError("비밀번호를 입력해주세요");
 			return false;
@@ -55,7 +59,7 @@ const LoginScreen = () => {
 		return true;
 	};
 
-	const handleLogin = async () => {
+	const handleLogin = async (): Promise<void> => {
 		const isStudentIdValid = validateStudentId();
 		const isPasswordValid = validatePassword();
 
@@ -99,7 +103,7 @@ const LoginScreen = () => {
 
 				console.log("로그인 결과:", isLoginSuccess ? "성공" : "실패");
 
-				if (isLoginSuccess) {
+				if (isLoginSuccess && setCookieHeader) {
 					// 로그인 성공
 					setSnackbarMessage("로그인에 성공했습니다!");
 					setSnackbarVisible(true);
@@ -111,8 +115,12 @@ const LoginScreen = () => {
 					await AsyncStorage.setItem("userNo", studentId);
 					await AsyncStorage.setItem("isLoggedIn", "true");
 
-					// 여기서 네비게이션 처리를 추가할 수 있습니다
-					// navigation.navigate('Home');
+					// SecureStorage에 로그인 정보 저장
+					await SecureStore.setItemAsync("userNo", studentId);
+					await SecureStore.setItemAsync("password", password);
+
+					// 홈 화면으로 이동
+					navigation.navigate("Home");
 				} else {
 					// 로그인 실패
 					setSnackbarMessage(
