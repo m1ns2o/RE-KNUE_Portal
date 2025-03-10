@@ -1,159 +1,286 @@
-// src/screens/HomeScreen.tsx
-import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Text, ScrollView } from "react-native";
-import { Appbar, Card, Button, FAB, useTheme } from "react-native-paper";
-import { SafeAreaView } from "react-native-safe-area-context";
+import React, { useState, useEffect, useCallback } from "react";
+import {
+	View,
+	Text,
+	StyleSheet,
+	ScrollView,
+	Alert,
+	ActivityIndicator,
+	Platform,
+} from "react-native";
+import { Button, Surface, useTheme } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as SecureStore from "expo-secure-store";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { DatePickerModal } from "react-native-paper-dates";
+import { format } from "date-fns";
 
-// 네비게이션 타입 정의
-type RootStackParamList = {
-	Splash: undefined;
-	Login: undefined;
-	Home: undefined;
-};
-
-type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, "Home">;
-
-type Props = {
-	navigation: HomeScreenNavigationProp;
-};
-
-const HomeScreen = ({ navigation }: Props) => {
+const TripRequestScreen = () => {
 	const theme = useTheme();
-	const [userNo, setUserNo] = useState("");
-	const [isLoading, setIsLoading] = useState(true);
 
+	// 당일과 익일로 기본 날짜 설정
+	const today = new Date();
+	const tomorrow = new Date(today);
+	tomorrow.setDate(tomorrow.getDate() + 1);
+
+	const [range, setRange] = useState({ startDate: today, endDate: tomorrow });
+	const [open, setOpen] = useState(false);
+	const [hakbeon, setHakbeon] = useState("");
+	const [loading, setLoading] = useState(false);
+
+	// DatePicker 모달 관련 함수
+	const onDismiss = useCallback(() => {
+		setOpen(false);
+	}, []);
+
+	const onConfirm = useCallback(({ startDate, endDate }) => {
+		setOpen(false);
+		setRange({ startDate, endDate });
+	}, []);
+
+	// 사용자 학번 불러오기
 	useEffect(() => {
-		// 사용자 정보 불러오기
 		const loadUserInfo = async () => {
 			try {
-				const storedUserNo = await AsyncStorage.getItem("userNo");
-				if (storedUserNo) {
-					setUserNo(storedUserNo);
+				const userNo = await AsyncStorage.getItem("userNo");
+				if (userNo) {
+					setHakbeon(userNo);
 				}
 			} catch (error) {
-				console.error("사용자 정보 로딩 오류:", error);
-			} finally {
-				setIsLoading(false);
+				console.error("사용자 정보 불러오기 실패:", error);
 			}
 		};
 
 		loadUserInfo();
 	}, []);
 
-	const handleLogout = async () => {
-		try {
-			// 로그인 관련 모든 데이터 삭제
-			await AsyncStorage.removeItem("authCookies");
-			await AsyncStorage.removeItem("userNo");
-			await AsyncStorage.removeItem("isLoggedIn");
-			await SecureStore.deleteItemAsync("userNo");
-			await SecureStore.deleteItemAsync("password");
+	// 폼 제출 핸들러
+	const handleSubmit = async () => {
+		// 필수 입력값 확인
+		if (!hakbeon) {
+			Alert.alert("입력 오류", "학번 정보가 없습니다. 다시 로그인해주세요.");
+			return;
+		}
 
-			// 로그인 화면으로 이동
-			navigation.reset({
-				index: 0,
-				routes: [{ name: "Login" }],
-			});
+		if (!range.startDate || !range.endDate) {
+			Alert.alert("입력 오류", "시작일과 종료일을 모두 선택해주세요.");
+			return;
+		}
+
+		// 날짜 형식 변환 (YYYY-MM-DD)
+		const formattedStartDate = format(range.startDate, "yyyy-MM-dd");
+		const formattedEndDate = format(range.endDate, "yyyy-MM-dd");
+
+		setLoading(true);
+
+		try {
+			// 쿠키 가져오기
+			const authCookies = await AsyncStorage.getItem("authCookies");
+
+			if (!authCookies) {
+				Alert.alert(
+					"로그인 오류",
+					"로그인 정보가 만료되었습니다. 다시 로그인해주세요."
+				);
+				setLoading(false);
+				return;
+			}
+
+			// 폼 데이터 준비
+			const formData = new URLSearchParams();
+			formData.append("tripType", "2"); // 외박은 2, 외출은 1
+			formData.append("tripTargetPlace", "1"); // 타 지역은 1, 본가는 2
+			formData.append("startDate", formattedStartDate);
+			formData.append("endDate", formattedEndDate);
+			formData.append("tripReason", ""); // 사유 필드 제거됨
+			formData.append("menuId", "341");
+			formData.append("enteranceInfoSeq", "1247"); // 필요에 따라 변경 가능
+			formData.append("hakbeon", hakbeon);
+
+			// API 호출
+			const response = await fetch(
+				"https://mpot.knue.ac.kr/dormitory/student/trip/apply",
+				{
+					method: "POST",
+					headers: {
+						host: "mpot.knue.ac.kr",
+						connection: "keep-alive",
+						pragma: "no-cache",
+						"cache-control": "no-cache",
+						origin: "https://mpot.knue.ac.kr",
+						"upgrade-insecure-requests": "1",
+						"user-agent":
+							"Mozilla/5.0 (Linux; Android 5.1.1; SM-G977N Build/LMY48Z; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.136 Mobile Safari/537.36 acanet/knue",
+						"content-type": "application/x-www-form-urlencoded",
+						accept:
+							"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
+						referer:
+							"https://mpot.knue.ac.kr/dormitory/student/trip?menuId=341&popupTitle=%EC%99%B8%EB%B0%95%EC%8B%A0%EC%B2%AD&popupType=0",
+						"accept-language": "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
+						"x-requested-with": "kr.acanet.knueapp",
+						cookie: authCookies,
+					},
+					body: formData.toString(),
+				}
+			);
+
+			// 응답 확인
+			if (response.ok) {
+				Alert.alert("신청 완료", "외박 신청이 성공적으로 제출되었습니다.");
+				// 폼 초기화 - 당일/익일로 다시 설정
+				const resetToday = new Date();
+				const resetTomorrow = new Date(resetToday);
+				resetTomorrow.setDate(resetTomorrow.getDate() + 1);
+				setRange({ startDate: resetToday, endDate: resetTomorrow });
+			} else {
+				const responseText = await response.text();
+				console.error("신청 실패:", responseText);
+				Alert.alert(
+					"신청 실패",
+					"외박 신청 중 오류가 발생했습니다. 다시 시도해주세요."
+				);
+			}
 		} catch (error) {
-			console.error("로그아웃 중 오류 발생:", error);
+			console.error("API 호출 오류:", error);
+			Alert.alert(
+				"오류 발생",
+				"네트워크 오류가 발생했습니다. 다시 시도해주세요."
+			);
+		} finally {
+			setLoading(false);
 		}
 	};
 
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
-			<Appbar.Header style={{ backgroundColor: theme.colors.primary }}>
-				<Appbar.Content
-					title="교원대학교 통합학사"
-					titleStyle={{ color: "white" }}
-				/>
-				<Appbar.Action icon="logout" color="white" onPress={handleLogout} />
-			</Appbar.Header>
+		<View style={styles.container}>
+			<ScrollView style={styles.scrollView}>
+				<Surface style={styles.formContainer}>
+					<Text style={[styles.title, { color: theme.colors.primary }]}>
+						외박 신청
+					</Text>
 
-			<ScrollView style={styles.content}>
-				<Card style={styles.card} mode="elevated">
-					<Card.Title title="환영합니다!" subtitle={`학번: ${userNo}`} />
-					<Card.Content>
-						<Text style={styles.paragraph}>
-							교원대학교 비공식 통합학사 시스템입니다. 필요한 기능을 하단
-							메뉴에서 선택하세요.
-						</Text>
-					</Card.Content>
-				</Card>
+					{/* 기간 선택 버튼 */}
+					<View style={styles.section}>
+						<Button
+							mode="outlined"
+							onPress={() => setOpen(true)}
+							style={styles.dateRangeButton}
+							icon="calendar"
+						>
+							{`${format(range.startDate, "yyyy/MM/dd")} - ${format(
+								range.endDate,
+								"yyyy/MM/dd"
+							)}`}
+						</Button>
 
-				{/* 학사 일정 카드 */}
-				<Card style={styles.card} mode="elevated">
-					<Card.Title title="학사 일정" />
-					<Card.Content>
-						<Text style={styles.calendarItem}>3월 2일 - 개강</Text>
-						<Text style={styles.calendarItem}>3월 15일 - 수강정정 마감</Text>
-						<Text style={styles.calendarItem}>4월 20일 - 중간고사 시작</Text>
-						<Text style={styles.calendarItem}>6월 15일 - 기말고사 시작</Text>
-					</Card.Content>
-				</Card>
+						<DatePickerModal
+							locale="ko"
+							mode="range"
+							visible={open}
+							onDismiss={onDismiss}
+							startDate={range.startDate}
+							endDate={range.endDate}
+							onConfirm={onConfirm}
+							// 추가 옵션
+							saveLabel="저장"
+							label="날짜 범위 선택"
+							startLabel="시작일"
+							endLabel="종료일"
+							animationType="slide"
+						/>
+					</View>
 
-				{/* 공지사항 카드 */}
-				<Card style={styles.card} mode="elevated">
-					<Card.Title title="공지사항" />
-					<Card.Content>
-						<Text style={styles.noticeItem}>
-							[중요] 2025학년도 1학기 장학금 신청 안내
+					{/* 날짜 범위 요약 표시 */}
+					<View style={styles.dateRangeSummary}>
+						<Text style={styles.dateRangeSummaryText}>
+							{format(range.startDate, "yyyy년 MM월 dd일")} 부터{"\n"}
+							{format(range.endDate, "yyyy년 MM월 dd일")} 까지
 						</Text>
-						<Text style={styles.noticeItem}>코로나19 예방접종 관련 안내</Text>
-						<Text style={styles.noticeItem}>
-							수강신청 시스템 일시 점검 안내
+						<Text style={styles.durationText}>
+							총{" "}
+							{Math.ceil(
+								(range.endDate - range.startDate) / (1000 * 60 * 60 * 24)
+							) + 1}
+							일
 						</Text>
-					</Card.Content>
-					<Card.Actions>
-						<Button>더보기</Button>
-					</Card.Actions>
-				</Card>
+					</View>
+
+					{/* 제출 버튼 */}
+					<Button
+						mode="contained"
+						onPress={handleSubmit}
+						style={styles.submitButton}
+						disabled={loading || !range.startDate || !range.endDate}
+						icon="check"
+					>
+						{loading ? "제출 중..." : "외박 신청하기"}
+					</Button>
+
+					{loading && (
+						<ActivityIndicator
+							size="large"
+							color={theme.colors.primary}
+							style={styles.loadingIndicator}
+						/>
+					)}
+				</Surface>
 			</ScrollView>
-
-			<FAB
-				icon="help"
-				style={[styles.fab, { backgroundColor: theme.colors.primary }]}
-				color="white"
-				onPress={() => console.log("도움말 버튼 클릭")}
-			/>
-		</SafeAreaView>
+		</View>
 	);
 };
 
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
+		backgroundColor: "#f5f5f5",
+		paddingTop: Platform.OS === "ios" ? 50 : 25,
 	},
-	content: {
+	scrollView: {
 		flex: 1,
-		padding: 16,
 	},
-	card: {
-		marginBottom: 16,
-		elevation: 2,
-	},
-	paragraph: {
-		marginBottom: 12,
-		fontSize: 14,
-		lineHeight: 20,
-	},
-	calendarItem: {
-		marginBottom: 8,
-		fontSize: 14,
-	},
-	noticeItem: {
-		marginBottom: 12,
-		fontSize: 14,
-		fontWeight: "500",
-	},
-	fab: {
-		position: "absolute",
+	formContainer: {
 		margin: 16,
-		right: 0,
-		bottom: 0,
+		padding: 16,
+		borderRadius: 8,
+		elevation: 4,
+	},
+	title: {
+		fontSize: 24,
+		fontWeight: "bold",
+		marginBottom: 24,
+		textAlign: "center",
+	},
+	section: {
+		marginBottom: 20,
+		alignItems: "center",
+	},
+	dateRangeButton: {
+		width: "100%",
+		paddingVertical: 10,
+	},
+	dateRangeSummary: {
+		backgroundColor: "#f0f0f0",
+		padding: 16,
+		borderRadius: 8,
+		marginBottom: 20,
+		alignItems: "center",
+	},
+	dateRangeSummaryText: {
+		fontSize: 16,
+		textAlign: "center",
+		lineHeight: 24,
+	},
+	durationText: {
+		fontSize: 18,
+		fontWeight: "bold",
+		marginTop: 8,
+		color: "#0090D6",
+	},
+	submitButton: {
+		marginTop: 20,
+		paddingVertical: 8,
+	},
+	loadingIndicator: {
+		marginTop: 20,
 	},
 });
 
-export default HomeScreen;
+export default TripRequestScreen;
