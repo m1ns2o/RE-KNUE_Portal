@@ -12,11 +12,17 @@ import { Button, Surface, useTheme } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DatePickerModal } from "react-native-paper-dates";
 import { format } from "date-fns";
-import { useFocusEffect } from "@react-navigation/native"; // 이 부분 추가
+import { useFocusEffect } from "@react-navigation/native";
+
+// DatePicker 결과를 위한 인터페이스 정의
+interface DateRange {
+	startDate: Date | undefined;
+	endDate: Date | undefined;
+}
 
 const TripRequestScreen = () => {
 	const theme = useTheme();
-	const [range, setRange] = useState({ startDate: null, endDate: null });
+	const [range, setRange] = useState<DateRange>({ startDate: undefined, endDate: undefined });
 	const [open, setOpen] = useState(false);
 	const [hakbeon, setHakbeon] = useState("");
 	const [loading, setLoading] = useState(false);
@@ -42,10 +48,13 @@ const TripRequestScreen = () => {
 		setOpen(false);
 	}, []);
 
-	const onConfirm = useCallback(({ startDate, endDate }) => {
-		setOpen(false);
-		setRange({ startDate, endDate });
-	}, []);
+	const onConfirm = useCallback(
+		(params: DateRange) => {
+			setOpen(false);
+			setRange(params);
+		},
+		[]
+	);
 
 	// 사용자 학번 불러오기
 	useEffect(() => {
@@ -159,6 +168,24 @@ const TripRequestScreen = () => {
 		}
 	};
 
+	// 렌더링 전 날짜 존재 여부 확인
+	const hasValidDateRange = range.startDate && range.endDate;
+
+	// 날짜 형식화를
+	const formatDateSafely = (date: Date | undefined, formatString: string): string => {
+		return date ? format(date, formatString) : "";
+	};
+
+	// 체류 기간 계산
+	const calculateDuration = (): number => {
+		if (range.startDate && range.endDate) {
+			return Math.ceil(
+				(range.endDate.getTime() - range.startDate.getTime()) / (1000 * 60 * 60 * 24)
+			) + 1;
+		}
+		return 0;
+	};
+
 	return (
 		<View style={styles.container}>
 			<ScrollView style={styles.scrollView}>
@@ -175,8 +202,8 @@ const TripRequestScreen = () => {
 							style={styles.dateRangeButton}
 							icon="calendar"
 						>
-							{range.startDate && range.endDate
-								? `${format(range.startDate, "yyyy/MM/dd")} - ${format(
+							{hasValidDateRange
+								? `${formatDateSafely(range.startDate, "yyyy/MM/dd")} - ${formatDateSafely(
 										range.endDate,
 										"yyyy/MM/dd"
 								  )}`
@@ -201,18 +228,14 @@ const TripRequestScreen = () => {
 					</View>
 
 					{/* 날짜 범위 요약 표시 */}
-					{range.startDate && range.endDate && (
+					{hasValidDateRange && (
 						<View style={styles.dateRangeSummary}>
 							<Text style={styles.dateRangeSummaryText}>
-								{format(range.startDate, "yyyy년 MM월 dd일")} 부터{"\n"}
-								{format(range.endDate, "yyyy년 MM월 dd일")} 까지
+								{formatDateSafely(range.startDate, "yyyy년 MM월 dd일")} 부터{"\n"}
+								{formatDateSafely(range.endDate, "yyyy년 MM월 dd일")} 까지
 							</Text>
 							<Text style={styles.durationText}>
-								총{" "}
-								{Math.ceil(
-									(range.endDate - range.startDate) / (1000 * 60 * 60 * 24)
-								) + 1}
-								일
+								총 {calculateDuration()}일
 							</Text>
 						</View>
 					)}
@@ -222,7 +245,7 @@ const TripRequestScreen = () => {
 						mode="contained"
 						onPress={handleSubmit}
 						style={styles.submitButton}
-						disabled={loading || !range.startDate || !range.endDate}
+						disabled={loading || !hasValidDateRange}
 						icon="check"
 					>
 						{loading ? "제출 중..." : "외박 신청하기"}
