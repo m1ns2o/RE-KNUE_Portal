@@ -5,7 +5,9 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { Provider as PaperProvider, DefaultTheme } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { RootStackParamList } from "./src/types/navigation"; // 외부 타입 가져오기
+import { enGB, ko, registerTranslation } from 'react-native-paper-dates'
+
+import { RootStackParamList } from "./src/types/navigation"; 
 
 // 화면 가져오기
 import LoginScreen from "./src/screens/auth/LoginScreen";
@@ -23,6 +25,8 @@ const theme = {
 		surface: "#FFFFFF",
 	},
 };
+
+registerTranslation('ko', ko); // datepicker 한국어 설정
 
 const Stack = createStackNavigator<RootStackParamList>();
 

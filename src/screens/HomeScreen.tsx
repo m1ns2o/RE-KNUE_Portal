@@ -12,19 +12,30 @@ import { Button, Surface, useTheme } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DatePickerModal } from "react-native-paper-dates";
 import { format } from "date-fns";
+import { useFocusEffect } from "@react-navigation/native"; // 이 부분 추가
 
 const TripRequestScreen = () => {
 	const theme = useTheme();
-
-	// 당일과 익일로 기본 날짜 설정
-	const today = new Date();
-	const tomorrow = new Date(today);
-	tomorrow.setDate(tomorrow.getDate() + 1);
-
-	const [range, setRange] = useState({ startDate: today, endDate: tomorrow });
+	const [range, setRange] = useState({ startDate: null, endDate: null });
 	const [open, setOpen] = useState(false);
 	const [hakbeon, setHakbeon] = useState("");
 	const [loading, setLoading] = useState(false);
+
+	// 화면에 포커스가 맞춰질 때마다 날짜를 초기화하는 함수
+	const resetDateRange = useCallback(() => {
+		const today = new Date();
+		const tomorrow = new Date(today);
+		tomorrow.setDate(tomorrow.getDate() + 1);
+		setRange({ startDate: today, endDate: tomorrow });
+	}, []);
+
+	// 화면에 포커스가 맞춰질 때마다 날짜 초기화
+	useFocusEffect(
+		useCallback(() => {
+			resetDateRange();
+			return () => {};
+		}, [resetDateRange])
+	);
 
 	// DatePicker 모달 관련 함수
 	const onDismiss = useCallback(() => {
@@ -50,7 +61,9 @@ const TripRequestScreen = () => {
 		};
 
 		loadUserInfo();
-	}, []);
+		// 초기 렌더링시에도 날짜 초기화
+		resetDateRange();
+	}, [resetDateRange]);
 
 	// 폼 제출 핸들러
 	const handleSubmit = async () => {
@@ -126,10 +139,7 @@ const TripRequestScreen = () => {
 			if (response.ok) {
 				Alert.alert("신청 완료", "외박 신청이 성공적으로 제출되었습니다.");
 				// 폼 초기화 - 당일/익일로 다시 설정
-				const resetToday = new Date();
-				const resetTomorrow = new Date(resetToday);
-				resetTomorrow.setDate(resetTomorrow.getDate() + 1);
-				setRange({ startDate: resetToday, endDate: resetTomorrow });
+				resetDateRange();
 			} else {
 				const responseText = await response.text();
 				console.error("신청 실패:", responseText);
@@ -165,10 +175,12 @@ const TripRequestScreen = () => {
 							style={styles.dateRangeButton}
 							icon="calendar"
 						>
-							{`${format(range.startDate, "yyyy/MM/dd")} - ${format(
-								range.endDate,
-								"yyyy/MM/dd"
-							)}`}
+							{range.startDate && range.endDate
+								? `${format(range.startDate, "yyyy/MM/dd")} - ${format(
+										range.endDate,
+										"yyyy/MM/dd"
+								  )}`
+								: "날짜를 선택하세요"}
 						</Button>
 
 						<DatePickerModal
@@ -189,19 +201,21 @@ const TripRequestScreen = () => {
 					</View>
 
 					{/* 날짜 범위 요약 표시 */}
-					<View style={styles.dateRangeSummary}>
-						<Text style={styles.dateRangeSummaryText}>
-							{format(range.startDate, "yyyy년 MM월 dd일")} 부터{"\n"}
-							{format(range.endDate, "yyyy년 MM월 dd일")} 까지
-						</Text>
-						<Text style={styles.durationText}>
-							총{" "}
-							{Math.ceil(
-								(range.endDate - range.startDate) / (1000 * 60 * 60 * 24)
-							) + 1}
-							일
-						</Text>
-					</View>
+					{range.startDate && range.endDate && (
+						<View style={styles.dateRangeSummary}>
+							<Text style={styles.dateRangeSummaryText}>
+								{format(range.startDate, "yyyy년 MM월 dd일")} 부터{"\n"}
+								{format(range.endDate, "yyyy년 MM월 dd일")} 까지
+							</Text>
+							<Text style={styles.durationText}>
+								총{" "}
+								{Math.ceil(
+									(range.endDate - range.startDate) / (1000 * 60 * 60 * 24)
+								) + 1}
+								일
+							</Text>
+						</View>
+					)}
 
 					{/* 제출 버튼 */}
 					<Button
