@@ -6,13 +6,13 @@ import {
 	ScrollView,
 	Alert,
 	ActivityIndicator,
-	Platform,
 } from "react-native";
 import { Button, Surface, useTheme } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DatePickerModal } from "react-native-paper-dates";
 import { format } from "date-fns";
 import { useFocusEffect } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // DatePicker 결과를 위한 인터페이스 정의
 interface DateRange {
@@ -22,7 +22,11 @@ interface DateRange {
 
 const TripRequestScreen = () => {
 	const theme = useTheme();
-	const [range, setRange] = useState<DateRange>({ startDate: undefined, endDate: undefined });
+	const insets = useSafeAreaInsets();
+	const [range, setRange] = useState<DateRange>({
+		startDate: undefined,
+		endDate: undefined,
+	});
 	const [open, setOpen] = useState(false);
 	const [hakbeon, setHakbeon] = useState("");
 	const [loading, setLoading] = useState(false);
@@ -48,13 +52,10 @@ const TripRequestScreen = () => {
 		setOpen(false);
 	}, []);
 
-	const onConfirm = useCallback(
-		(params: DateRange) => {
-			setOpen(false);
-			setRange(params);
-		},
-		[]
-	);
+	const onConfirm = useCallback((params: DateRange) => {
+		setOpen(false);
+		setRange(params);
+	}, []);
 
 	// 사용자 학번 불러오기
 	useEffect(() => {
@@ -172,22 +173,28 @@ const TripRequestScreen = () => {
 	const hasValidDateRange = range.startDate && range.endDate;
 
 	// 날짜 형식화를
-	const formatDateSafely = (date: Date | undefined, formatString: string): string => {
+	const formatDateSafely = (
+		date: Date | undefined,
+		formatString: string
+	): string => {
 		return date ? format(date, formatString) : "";
 	};
 
 	// 체류 기간 계산
 	const calculateDuration = (): number => {
 		if (range.startDate && range.endDate) {
-			return Math.ceil(
-				(range.endDate.getTime() - range.startDate.getTime()) / (1000 * 60 * 60 * 24)
-			) + 1;
+			return (
+				Math.ceil(
+					(range.endDate.getTime() - range.startDate.getTime()) /
+						(1000 * 60 * 60 * 24)
+				) + 1
+			);
 		}
 		return 0;
 	};
 
 	return (
-		<View style={styles.container}>
+		<View style={[styles.container, { paddingTop: insets.top }]}>
 			<ScrollView style={styles.scrollView}>
 				<Surface style={styles.formContainer}>
 					<Text style={[styles.title, { color: theme.colors.primary }]}>
@@ -203,10 +210,10 @@ const TripRequestScreen = () => {
 							icon="calendar"
 						>
 							{hasValidDateRange
-								? `${formatDateSafely(range.startDate, "yyyy/MM/dd")} - ${formatDateSafely(
-										range.endDate,
+								? `${formatDateSafely(
+										range.startDate,
 										"yyyy/MM/dd"
-								  )}`
+								  )} - ${formatDateSafely(range.endDate, "yyyy/MM/dd")}`
 								: "날짜를 선택하세요"}
 						</Button>
 
@@ -226,19 +233,6 @@ const TripRequestScreen = () => {
 							animationType="slide"
 						/>
 					</View>
-
-					{/* 날짜 범위 요약 표시 */}
-					{hasValidDateRange && (
-						<View style={styles.dateRangeSummary}>
-							<Text style={styles.dateRangeSummaryText}>
-								{formatDateSafely(range.startDate, "yyyy년 MM월 dd일")} 부터{"\n"}
-								{formatDateSafely(range.endDate, "yyyy년 MM월 dd일")} 까지
-							</Text>
-							<Text style={styles.durationText}>
-								총 {calculateDuration()}일
-							</Text>
-						</View>
-					)}
 
 					{/* 제출 버튼 */}
 					<Button
@@ -268,7 +262,7 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: "#f5f5f5",
-		paddingTop: Platform.OS === "ios" ? 50 : 25,
+		// SafeArea 인셋을 사용하므로 하드코딩된 paddingTop 제거
 	},
 	scrollView: {
 		flex: 1,
@@ -292,6 +286,7 @@ const styles = StyleSheet.create({
 	dateRangeButton: {
 		width: "100%",
 		paddingVertical: 10,
+		borderRadius: 8,
 	},
 	dateRangeSummary: {
 		backgroundColor: "#f0f0f0",
@@ -314,6 +309,7 @@ const styles = StyleSheet.create({
 	submitButton: {
 		marginTop: 20,
 		paddingVertical: 8,
+		borderRadius: 8,
 	},
 	loadingIndicator: {
 		marginTop: 20,
