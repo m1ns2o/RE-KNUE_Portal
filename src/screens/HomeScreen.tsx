@@ -13,6 +13,7 @@ import { DatePickerModal } from "react-native-paper-dates";
 import { format } from "date-fns";
 import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import apiService from "../apis/apiService"; // API 서비스 import
 
 // DatePicker 결과를 위한 인터페이스 정의
 interface DateRange {
@@ -95,10 +96,10 @@ const TripRequestScreen = () => {
 		setLoading(true);
 
 		try {
-			// 쿠키 가져오기
-			const authCookies = await AsyncStorage.getItem("authCookies");
+			// 로그인 상태 확인
+			const isLoggedIn = await AsyncStorage.getItem("isLoggedIn");
 
-			if (!authCookies) {
+			if (isLoggedIn !== "true") {
 				Alert.alert(
 					"로그인 오류",
 					"로그인 정보가 만료되었습니다. 다시 로그인해주세요."
@@ -118,51 +119,28 @@ const TripRequestScreen = () => {
 			formData.append("enteranceInfoSeq", "1247"); // 필요에 따라 변경 가능
 			formData.append("hakbeon", hakbeon);
 
-			// API 호출
-			const response = await fetch(
-				"https://mpot.knue.ac.kr/dormitory/student/trip/apply",
+			// API 서비스를 사용하여 API 호출
+			const response = await apiService.post(
+				"/dormitory/student/trip/apply",
+				formData.toString(),
 				{
-					method: "POST",
 					headers: {
-						host: "mpot.knue.ac.kr",
-						connection: "keep-alive",
-						pragma: "no-cache",
-						"cache-control": "no-cache",
-						origin: "https://mpot.knue.ac.kr",
-						"upgrade-insecure-requests": "1",
-						"user-agent":
-							"Mozilla/5.0 (Linux; Android 5.1.1; SM-G977N Build/LMY48Z; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.136 Mobile Safari/537.36 acanet/knue",
 						"content-type": "application/x-www-form-urlencoded",
-						accept:
-							"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
 						referer:
 							"https://mpot.knue.ac.kr/dormitory/student/trip?menuId=341&popupTitle=%EC%99%B8%EB%B0%95%EC%8B%A0%EC%B2%AD&popupType=0",
-						"accept-language": "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
-						"x-requested-with": "kr.acanet.knueapp",
-						cookie: authCookies,
 					},
-					body: formData.toString(),
 				}
 			);
 
-			// 응답 확인
-			if (response.ok) {
-				Alert.alert("신청 완료", "외박 신청이 성공적으로 제출되었습니다.");
-				// 폼 초기화 - 당일/익일로 다시 설정
-				resetDateRange();
-			} else {
-				const responseText = await response.text();
-				console.error("신청 실패:", responseText);
-				Alert.alert(
-					"신청 실패",
-					"외박 신청 중 오류가 발생했습니다. 다시 시도해주세요."
-				);
-			}
+			// 응답 확인 (apiService는 성공 시 데이터를 반환, 실패 시 예외를 발생시킴)
+			Alert.alert("신청 완료", "외박 신청이 성공적으로 제출되었습니다.");
+			// 폼 초기화 - 당일/익일로 다시 설정
+			resetDateRange();
 		} catch (error) {
 			console.error("API 호출 오류:", error);
 			Alert.alert(
 				"오류 발생",
-				"네트워크 오류가 발생했습니다. 다시 시도해주세요."
+				"외박 신청 중 오류가 발생했습니다. 다시 시도해주세요."
 			);
 		} finally {
 			setLoading(false);
@@ -172,7 +150,7 @@ const TripRequestScreen = () => {
 	// 렌더링 전 날짜 존재 여부 확인
 	const hasValidDateRange = range.startDate && range.endDate;
 
-	// 날짜 형식화를
+	// 날짜 형식화
 	const formatDateSafely = (
 		date: Date | undefined,
 		formatString: string
@@ -233,6 +211,19 @@ const TripRequestScreen = () => {
 							animationType="slide"
 						/>
 					</View>
+
+					{/* 체류 기간 표시 */}
+					{hasValidDateRange && (
+						<View style={styles.dateRangeSummary}>
+							<Text style={styles.dateRangeSummaryText}>
+								{formatDateSafely(range.startDate, "yyyy년 MM월 dd일")} ~{" "}
+								{formatDateSafely(range.endDate, "yyyy년 MM월 dd일")}
+							</Text>
+							<Text style={styles.durationText}>
+								총 {calculateDuration()}일
+							</Text>
+						</View>
+					)}
 
 					{/* 제출 버튼 */}
 					<Button

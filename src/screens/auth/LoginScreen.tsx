@@ -16,10 +16,9 @@ import {
 	useTheme,
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as SecureStore from "expo-secure-store";
 import { useNavigation } from "@react-navigation/native";
 import { NavigationProps } from "../../types/navigation"; // 외부 타입 파일에서 가져오기
+import authService from "../../apis/authService"; // 새로 만든 인증 서비스 import
 
 const LoginScreen: React.FC = () => {
 	const theme = useTheme();
@@ -66,58 +65,19 @@ const LoginScreen: React.FC = () => {
 		if (isStudentIdValid && isPasswordValid) {
 			setIsLoading(true);
 			try {
-				// KNUE 통합학사 시스템 로그인 API 호출
-				const response = await fetch("https://mpot.knue.ac.kr/common/login", {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/x-www-form-urlencoded",
-						host: "mpot.knue.ac.kr",
-						connection: "keep-alive",
-						pragma: "no-cache",
-						"cache-control": "no-cache",
-						origin: "https://mpot.knue.ac.kr",
-						"upgrade-insecure-requests": "1",
-						"user-agent":
-							"Mozilla/5.0 (Linux; Android 5.1.1; SM-G977N Build/LMY48Z; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.136 Mobile Safari/537.36 acanet/knue",
-						accept:
-							"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
-						referer: "https://mpot.knue.ac.kr/common/login",
-						"accept-language": "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
-						"x-requested-with": "kr.acanet.knueapp",
-					},
-					body: new URLSearchParams({
-						userNo: studentId,
-						password: password,
-						rememberMe: "N",
-					}).toString(),
-				});
-
-				// 응답 헤더 확인
-				const setCookieHeader = response.headers.get("set-cookie");
-
-				// 디버깅을 위한 로그 출력
-				console.log("로그인 응답 쿠키:", setCookieHeader);
-
-				// 로그인 성공 판단: 쿠키 헤더가 있으면 성공, 없으면 실패
-				const isLoginSuccess = setCookieHeader !== null;
+				// 새로운 authService를 사용하여 로그인
+				const isLoginSuccess = await authService.login(
+					studentId,
+					password,
+					true // 자동 로그인을 위해 인증 정보 저장
+				);
 
 				console.log("로그인 결과:", isLoginSuccess ? "성공" : "실패");
 
-				if (isLoginSuccess && setCookieHeader) {
+				if (isLoginSuccess) {
 					// 로그인 성공
 					setSnackbarMessage("로그인에 성공했습니다!");
 					setSnackbarVisible(true);
-
-					// 쿠키 저장
-					await AsyncStorage.setItem("authCookies", setCookieHeader);
-
-					// 사용자 정보 저장
-					await AsyncStorage.setItem("userNo", studentId);
-					await AsyncStorage.setItem("isLoggedIn", "true");
-
-					// SecureStorage에 로그인 정보 저장
-					await SecureStore.setItemAsync("userNo", studentId);
-					await SecureStore.setItemAsync("password", password);
 
 					// 홈 화면으로 이동
 					navigation.navigate("Home");
