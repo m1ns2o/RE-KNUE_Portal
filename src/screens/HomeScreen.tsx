@@ -114,7 +114,7 @@ const TripRequestScreen = () => {
 			formData.append("tripTargetPlace", "1"); // 타 지역은 1, 본가는 2
 			formData.append("startDate", formattedStartDate);
 			formData.append("endDate", formattedEndDate);
-			formData.append("tripReason", ""); // 사유 필드 제거됨
+			formData.append("tripReason", "외박"); // 사유 필드 제거됨
 			formData.append("menuId", "341");
 			formData.append("enteranceInfoSeq", "1247"); // 필요에 따라 변경 가능
 			formData.append("hakbeon", hakbeon);
@@ -159,17 +159,6 @@ const TripRequestScreen = () => {
 	};
 
 	// 체류 기간 계산
-	const calculateDuration = (): number => {
-		if (range.startDate && range.endDate) {
-			return (
-				Math.ceil(
-					(range.endDate.getTime() - range.startDate.getTime()) /
-						(1000 * 60 * 60 * 24)
-				) + 1
-			);
-		}
-		return 0;
-	};
 
 	return (
 		<View style={[styles.container, { paddingTop: insets.top }]}>
@@ -212,19 +201,6 @@ const TripRequestScreen = () => {
 						/>
 					</View>
 
-					{/* 체류 기간 표시 */}
-					{hasValidDateRange && (
-						<View style={styles.dateRangeSummary}>
-							<Text style={styles.dateRangeSummaryText}>
-								{formatDateSafely(range.startDate, "yyyy년 MM월 dd일")} ~{" "}
-								{formatDateSafely(range.endDate, "yyyy년 MM월 dd일")}
-							</Text>
-							<Text style={styles.durationText}>
-								총 {calculateDuration()}일
-							</Text>
-						</View>
-					)}
-
 					{/* 제출 버튼 */}
 					<Button
 						mode="contained"
@@ -253,7 +229,6 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: "#f5f5f5",
-		// SafeArea 인셋을 사용하므로 하드코딩된 paddingTop 제거
 	},
 	scrollView: {
 		flex: 1,
@@ -263,6 +238,7 @@ const styles = StyleSheet.create({
 		padding: 16,
 		borderRadius: 8,
 		elevation: 4,
+		backgroundColor: "#fff",
 	},
 	title: {
 		fontSize: 24,
@@ -279,18 +255,7 @@ const styles = StyleSheet.create({
 		paddingVertical: 10,
 		borderRadius: 8,
 	},
-	dateRangeSummary: {
-		backgroundColor: "#f0f0f0",
-		padding: 16,
-		borderRadius: 8,
-		marginBottom: 20,
-		alignItems: "center",
-	},
-	dateRangeSummaryText: {
-		fontSize: 16,
-		textAlign: "center",
-		lineHeight: 24,
-	},
+
 	durationText: {
 		fontSize: 18,
 		fontWeight: "bold",
@@ -298,7 +263,7 @@ const styles = StyleSheet.create({
 		color: "#0090D6",
 	},
 	submitButton: {
-		marginTop: 20,
+		// marginTop: 0,
 		paddingVertical: 8,
 		borderRadius: 8,
 	},
