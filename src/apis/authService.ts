@@ -24,7 +24,7 @@ const authService = {
         new URLSearchParams({
           userNo,
           password,
-          rememberMe: 'N',
+          rememberMe: 'Y',
         }).toString()
       );
 
