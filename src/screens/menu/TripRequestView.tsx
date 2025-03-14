@@ -11,7 +11,6 @@ import {
 import { Button, Surface, useTheme, Divider, Chip } from "react-native-paper";
 import { DatePickerModal } from "react-native-paper-dates";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { format } from "date-fns";
 
 // 유틸리티 및 타입
 import { DateRange, TripItem, formatDateSafely } from "../../utils/tripUtils";

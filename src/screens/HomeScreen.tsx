@@ -636,6 +636,7 @@ const styles = StyleSheet.create({
 		padding: 16,
 		borderRadius: 8,
 		elevation: 2,
+		backgroundColor: "#fff",
 	},
 	tripItemHeader: {
 		flexDirection: "row",
