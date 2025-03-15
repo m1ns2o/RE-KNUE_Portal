@@ -80,6 +80,20 @@ export const parseTripDate = (dateStr: string): Date | null => {
  * @returns boolean 신청 가능하면 true, 불가능하면 false
  */
 export const validateTripRequestTime = (startDate: Date): boolean => {
+    // 현재 날짜 (시간 제외)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // 시작일이 오늘 이전인지 확인 (과거 날짜)
+    if (startDate < today) {
+        Alert.alert(
+            "신청 불가",
+            "과거 날짜에 대한 외박은 신청할 수 없습니다.",
+            [{ text: "확인", style: "default" }]
+        );
+        return false;
+    }
+    
     // 시작일이 오늘이고 현재 시간이 23:30 이후면 신청 불가
     if (isToday(startDate) && isPastCurfewTime()) {
         Alert.alert(

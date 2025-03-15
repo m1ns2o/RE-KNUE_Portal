@@ -91,7 +91,7 @@ const TripRequestView: React.FC<TripRequestViewProps> = ({
 					>{`${item.startDate} ~ ${item.endDate}`}</Text>
 				</View>
 
-				{(item.status === "취소 가능" || item.status === "대기중") && (
+				{item.status === "취소 가능" && (
 					<Button
 						mode="outlined"
 						onPress={() => onCancelTrip(item)}
