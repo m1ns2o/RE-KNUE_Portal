@@ -14,19 +14,22 @@ import apiService from "../../apis/apiService";
 import TripRequestView from "../../components/trip/TripRequestView";
 
 // 유틸리티 및 타입
-import { 
-	DateRange, 
-	TripItem, 
-	parseTripHistory, 
+import {
+	DateRange,
+	TripItem,
+	parseTripHistory,
 	extractEnteranceInfoSeq,
 	validateTripRequestTime,
-	validateTripCancelTime
+	validateTripCancelTime,
 } from "../../utils/tripUtils";
 import { RootStackParamList } from "../../types/navigation";
 
 /**
  * 외박 신청 화면의 로직을 처리하는 컴포넌트
  */
+
+type TripScreenProps = StackScreenProps<RootStackParamList, "Trip">;
+
 const TripRequestScreen: React.FC<TripScreenProps> = ({ navigation }) => {
 	// 상태 관리
 	const [range, setRange] = useState<DateRange>({
@@ -52,19 +55,23 @@ const TripRequestScreen: React.FC<TripScreenProps> = ({ navigation }) => {
 	const fetchTripRequestPage = useCallback(async () => {
 		try {
 			setLoading(true);
-			
+
 			// 외박 신청 페이지 HTML 불러오기
 			const htmlData = await apiService.getHTML(
 				"/dormitory/student/trip?menuId=341&tab=1",
 				{
 					headers: {
-						referer: "https://mpot.knue.ac.kr/dormitory/student/trip?menuId=341",
+						referer:
+							"https://mpot.knue.ac.kr/dormitory/student/trip?menuId=341",
 					},
 				}
 			);
-			
-			console.log("신청 페이지 HTML 데이터 길이:", htmlData ? htmlData.length : 0);
-			
+
+			console.log(
+				"신청 페이지 HTML 데이터 길이:",
+				htmlData ? htmlData.length : 0
+			);
+
 			if (htmlData && typeof htmlData === "string") {
 				// enteranceInfoSeq 값 추출
 				const infoSeq = extractEnteranceInfoSeq(htmlData);
@@ -73,7 +80,7 @@ const TripRequestScreen: React.FC<TripScreenProps> = ({ navigation }) => {
 					setEnteranceInfoSeq(infoSeq);
 					await AsyncStorage.setItem("enteranceInfoSeq", infoSeq);
 				}
-				
+
 				// 학번은 AsyncStorage에서 불러온 값을 계속 사용
 			} else {
 				console.log("유효한 HTML 응답이 없습니다.");
@@ -174,9 +181,11 @@ const TripRequestScreen: React.FC<TripScreenProps> = ({ navigation }) => {
 				if (userNo) {
 					setHakbeon(userNo);
 				}
-				
+
 				// enteranceInfoSeq 값이 있는지 확인하고 없으면 신청 페이지 로드
-				const savedEnteranceInfoSeq = await AsyncStorage.getItem("enteranceInfoSeq");
+				const savedEnteranceInfoSeq = await AsyncStorage.getItem(
+					"enteranceInfoSeq"
+				);
 				if (savedEnteranceInfoSeq) {
 					setEnteranceInfoSeq(savedEnteranceInfoSeq);
 				}
@@ -210,7 +219,7 @@ const TripRequestScreen: React.FC<TripScreenProps> = ({ navigation }) => {
 			alert("시작일과 종료일을 모두 선택해주세요.");
 			return;
 		}
-		
+
 		// 시간 제약 검증
 		if (!validateTripRequestTime(range.startDate)) {
 			return;
@@ -262,26 +271,34 @@ const TripRequestScreen: React.FC<TripScreenProps> = ({ navigation }) => {
 				// 외박 리스트 파싱
 				const tripData = parseTripHistory(response);
 				setTripList(tripData);
-				
+
 				// 신청한 외박이 리스트에 있는지 확인
 				const isRegistered = tripData.some(
-					(trip) => 
-						trip.startDate.includes(formattedStartDate.substring(5).replace(/-/g, '.')) && 
-						trip.endDate.includes(formattedEndDate.substring(5).replace(/-/g, '.'))
+					(trip) =>
+						trip.startDate.includes(
+							formattedStartDate.substring(5).replace(/-/g, ".")
+						) &&
+						trip.endDate.includes(
+							formattedEndDate.substring(5).replace(/-/g, ".")
+						)
 				);
-				
+
 				if (isRegistered) {
 					alert("외박 신청이 성공적으로 제출되었습니다.");
 				} else {
-					alert("외박 신청이 처리되었으나, 신청 목록에서 확인되지 않습니다. 다시 확인해주세요.");
+					alert(
+						"외박 신청이 처리되었으나, 신청 목록에서 확인되지 않습니다. 다시 확인해주세요."
+					);
 				}
 			} else {
 				// 응답이 문자열이 아닌 경우, 리스트 직접 불러오기
-				console.log("응답이 HTML 형식이 아닙니다. 외박 리스트를 다시 불러옵니다.");
+				console.log(
+					"응답이 HTML 형식이 아닙니다. 외박 리스트를 다시 불러옵니다."
+				);
 				await fetchTripList();
 				alert("외박 신청이 처리되었습니다. 외박 목록을 확인해주세요.");
 			}
-			
+
 			resetDateRange();
 		} catch (error) {
 			console.error(
@@ -309,7 +326,7 @@ const TripRequestScreen: React.FC<TripScreenProps> = ({ navigation }) => {
 			// 날짜 형식 변환 (10.03.12 -> 2025-03-12 형식으로)
 			// startDate와 endDate가 "10.03.12" 형식인 경우 "2025-03-12" 형식으로 변환
 			const formatDate = (dateStr: string): string => {
-				const parts = dateStr.split('.');
+				const parts = dateStr.split(".");
 				if (parts.length === 3) {
 					// YY.MM.DD 형식인 경우 20YY-MM-DD 형식으로 변환
 					return `20${parts[0]}-${parts[1]}-${parts[2]}`;
@@ -333,8 +350,9 @@ const TripRequestScreen: React.FC<TripScreenProps> = ({ navigation }) => {
 				{
 					headers: {
 						"content-type": "application/x-www-form-urlencoded",
-						"origin": "https://mpot.knue.ac.kr",
-						"referer": "https://mpot.knue.ac.kr/dormitory/student/trip?menuId=341&tab=2",
+						origin: "https://mpot.knue.ac.kr",
+						referer:
+							"https://mpot.knue.ac.kr/dormitory/student/trip?menuId=341&tab=2",
 						"upgrade-insecure-requests": "1",
 					},
 				}
@@ -345,18 +363,22 @@ const TripRequestScreen: React.FC<TripScreenProps> = ({ navigation }) => {
 				// 외박 리스트 파싱
 				const tripData = parseTripHistory(response);
 				setTripList(tripData);
-				
+
 				// 취소된 외박이 리스트에서 사라졌는지 확인
-				const isCanceled = !tripData.some(trip => trip.seq === seq);
-				
+				const isCanceled = !tripData.some((trip) => trip.seq === seq);
+
 				if (isCanceled) {
 					alert("외박 신청이 성공적으로 취소되었습니다.");
 				} else {
-					alert("외박 취소가 처리되었으나, 취소된 항목이 아직 목록에 있습니다. 다시 확인해주세요.");
+					alert(
+						"외박 취소가 처리되었으나, 취소된 항목이 아직 목록에 있습니다. 다시 확인해주세요."
+					);
 				}
 			} else {
 				// 응답이 문자열이 아닌 경우, 리스트 직접 불러오기
-				console.log("응답이 HTML 형식이 아닙니다. 외박 리스트를 다시 불러옵니다.");
+				console.log(
+					"응답이 HTML 형식이 아닙니다. 외박 리스트를 다시 불러옵니다."
+				);
 				await fetchTripList();
 				alert("외박 취소가 처리되었습니다. 외박 목록을 확인해주세요.");
 			}
@@ -378,7 +400,7 @@ const TripRequestScreen: React.FC<TripScreenProps> = ({ navigation }) => {
 		if (!validateTripCancelTime(item)) {
 			return;
 		}
-		
+
 		// 모든 검증을 통과한 경우 취소 확인 창 표시
 		Alert.alert(
 			"외박 취소",
@@ -386,12 +408,13 @@ const TripRequestScreen: React.FC<TripScreenProps> = ({ navigation }) => {
 			[
 				{
 					text: "취소",
-					style: "cancel"
+					style: "cancel",
 				},
 				{
 					text: "확인",
-					onPress: () => handleCancelTrip(item.seq, item.startDate, item.endDate)
-				}
+					onPress: () =>
+						handleCancelTrip(item.seq, item.startDate, item.endDate),
+				},
 			]
 		);
 	};
