@@ -6,6 +6,7 @@ export type RootStackParamList = {
 	Splash: undefined;
 	Login: undefined;
 	Home: undefined;
+	Trip: undefined;
 	// 필요한 다른 화면들과 각 화면에 전달되는 파라미터 타입 추가
 	// 예시:
 	// Profile: { userId: string };

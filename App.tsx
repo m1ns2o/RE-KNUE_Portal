@@ -5,14 +5,15 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { Provider as PaperProvider, DefaultTheme } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { enGB, ko, registerTranslation } from 'react-native-paper-dates'
+import { ko, registerTranslation } from 'react-native-paper-dates'
 
 import { RootStackParamList } from "./src/types/navigation"; 
 
 // 화면 가져오기
 import LoginScreen from "./src/screens/auth/LoginScreen";
 import SplashScreen from "./src/screens/auth/SplashScreen";
-import HomeScreen from "./src/screens/HomeScreen";
+// import HomeScreen from "./src/screens/HomeScreen";
+import TripScreen from "./src/screens/menu/TripRequestScreen"
 
 // 테마 정의 - #0090D6를 메인 컬러로 설정
 const theme = {
@@ -44,7 +45,8 @@ export default function App() {
 					>
 						<Stack.Screen name="Splash" component={SplashScreen} />
 						<Stack.Screen name="Login" component={LoginScreen} />
-						<Stack.Screen name="Home" component={HomeScreen} />
+						{/* <Stack.Screen name="Home" component={HomeScreen} /> */}
+						<Stack.Screen name="Trip"	component={TripScreen}/>
 					</Stack.Navigator>
 				</NavigationContainer>
 			</PaperProvider>
