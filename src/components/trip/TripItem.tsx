@@ -1,7 +1,7 @@
 // src/components/trip/TripItem.tsx
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { Surface, useTheme, Divider, Chip, Button } from "react-native-paper";
+import { View, Text, StyleSheet, Platform } from "react-native";
+import { Surface, useTheme, Divider, Button } from "react-native-paper";
 import { TripItem as TripItemType } from "../../utils/tripUtils";
 
 interface TripItemProps {
@@ -24,18 +24,18 @@ const TripItem: React.FC<TripItemProps> = ({ item, onCancelTrip }) => {
 		<Surface style={styles.tripItemCard}>
 			<View style={styles.tripItemHeader}>
 				<Text style={styles.tripType}>{item.tripType}</Text>
-				<Chip
-					mode="outlined"
-					style={[styles.statusChip, { borderColor: statusColor }]}
-					textStyle={{
-						color: statusColor,
-						fontSize: 10,
-						lineHeight: 10,
-						textAlign: "center",
-					}}
-				>
-					{item.status}
-				</Chip>
+				{/* 커스텀 Chip 대체 */}
+				<View style={[styles.customChip, { borderColor: statusColor }]}>
+					<Text
+						style={[
+							styles.customChipText,
+							{ color: statusColor },
+							Platform.OS === "android" && styles.androidTextFix, // 안드로이드 전용 스타일
+						]}
+					>
+						{item.status}
+					</Text>
+				</View>
 			</View>
 
 			<Divider style={styles.divider} />
@@ -52,7 +52,8 @@ const TripItem: React.FC<TripItemProps> = ({ item, onCancelTrip }) => {
 				>{`${item.startDate} ~ ${item.endDate}`}</Text>
 			</View>
 
-			{(item.status === "취소 가능" || item.status === "대기중") && (
+			{/* 취소 가능 상태일 때만 버튼 표시 */}
+			{item.status === "취소 가능" && (
 				<Button
 					mode="outlined"
 					onPress={() => onCancelTrip(item)}
@@ -85,10 +86,22 @@ const styles = StyleSheet.create({
 		fontSize: 18,
 		fontWeight: "bold",
 	},
-	statusChip: {
+	customChip: {
 		height: 28,
+		borderWidth: 1,
+		borderRadius: 14,
 		alignItems: "center",
 		justifyContent: "center",
+		paddingHorizontal: 12,
+	},
+	customChipText: {
+		fontSize: 14,
+		lineHeight: 14,
+		textAlignVertical: "center",
+		includeFontPadding: false,
+	},
+	androidTextFix: {
+		lineHeight: 18, // 안드로이드에서만 lineHeight 조정
 	},
 	divider: {
 		marginVertical: 8,

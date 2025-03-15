@@ -242,8 +242,8 @@ const TripRequestScreen: React.FC<TripScreenProps> = ({ navigation }) => {
 
 			// 폼 데이터 준비
 			const formData = new URLSearchParams();
-			formData.append("tripType", "2"); // 외박은 2, 외출은 1
-			formData.append("tripTargetPlace", "1"); // 타 지역은 1, 본가는 2
+			formData.append("tripType", "2"); 
+			formData.append("tripTargetPlace", "1"); 
 			formData.append("startDate", formattedStartDate);
 			formData.append("endDate", formattedEndDate);
 			formData.append("tripReason", "외박");
