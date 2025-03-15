@@ -1,5 +1,6 @@
 // src/utils/tripUtils.ts
 import { format } from 'date-fns';
+import { Alert } from 'react-native';
 
 // 외박 항목 인터페이스 정의
 export interface TripItem {
@@ -17,6 +18,135 @@ export interface DateRange {
     endDate: Date | undefined;
 }
 
+/**
+ * HTML 응답에서 enteranceInfoSeq 값을 추출하는 함수
+ * @param htmlContent HTML 응답 문자열
+ * @returns 추출된 enteranceInfoSeq 값 또는 null
+ */
+export const extractEnteranceInfoSeq = (htmlContent: string): string | null => {
+    const regex = /<input\s+type="hidden"\s+name="enteranceInfoSeq"\s+value="(\d+)"/i;
+    const match = htmlContent.match(regex);
+    return match && match[1] ? match[1] : null;
+};
+
+/**
+ * HTML 응답에서 hakbeon 값을 추출하는 함수
+ * @param htmlContent HTML 응답 문자열
+ * @returns 추출된 hakbeon 값 또는 null
+ */
+export const extractHakbeon = (htmlContent: string): string | null => {
+    const regex = /<input\s+type="hidden"\s+name="hakbeon"\s+value="(\d+)"/i;
+    const match = htmlContent.match(regex);
+    return match && match[1] ? match[1] : null;
+};
+
+/**
+ * 날짜가 오늘인지 확인하는 함수
+ * @param date 확인할 날짜
+ * @returns boolean 오늘이면 true, 아니면 false
+ */
+export const isToday = (date: Date): boolean => {
+    const today = new Date();
+    return date.getFullYear() === today.getFullYear() &&
+           date.getMonth() === today.getMonth() &&
+           date.getDate() === today.getDate();
+};
+
+/**
+ * 현재 시간이 오후 11시 30분을 지났는지 확인하는 함수
+ * @returns boolean 오후 11시 30분 지났으면 true, 아니면 false
+ */
+export const isPastCurfewTime = (): boolean => {
+    const now = new Date();
+    return now.getHours() >= 23 && now.getMinutes() >= 30;
+};
+
+/**
+ * YY.MM.DD 형식의 날짜 문자열을 Date 객체로 변환
+ * @param dateStr YY.MM.DD 형식의 날짜 문자열 (예: 25.03.15)
+ * @returns Date 객체 또는 null (변환 실패시)
+ */
+export const parseTripDate = (dateStr: string): Date | null => {
+    const parts = dateStr.split('.');
+    if (parts.length !== 3) {
+        return null;
+    }
+    return new Date(`20${parts[0]}-${parts[1]}-${parts[2]}`);
+};
+
+/**
+ * 외박 신청 가능 시간인지 검증
+ * @param startDate 외박 시작일
+ * @returns boolean 신청 가능하면 true, 불가능하면 false
+ */
+export const validateTripRequestTime = (startDate: Date): boolean => {
+    // 시작일이 오늘이고 현재 시간이 23:30 이후면 신청 불가
+    if (isToday(startDate) && isPastCurfewTime()) {
+        Alert.alert(
+            "신청 불가",
+            "오후 11시 30분 이후에는 당일 외박을 신청할 수 없습니다.",
+            [{ text: "확인", style: "default" }]
+        );
+        return false;
+    }
+    return true;
+};
+
+/**
+ * 외박 취소 가능 여부 검증
+ * @param item 취소할 외박 항목
+ * @returns boolean 취소 가능하면 true, 불가능하면 false
+ */
+export const validateTripCancelTime = (item: TripItem): boolean => {
+    // 시작일 파싱
+    const startDate = parseTripDate(item.startDate);
+    if (!startDate) {
+        Alert.alert(
+            "날짜 오류",
+            "외박 날짜 형식이 올바르지 않습니다.",
+            [{ text: "확인", style: "default" }]
+        );
+        return false;
+    }
+    
+    // 오늘 이전인지 확인
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const isPastDate = startDate < today;
+    
+    // 취소 가능한 상태인지 확인
+    if (item.status !== "취소 가능" && item.status !== "대기중") {
+        Alert.alert(
+            "취소 불가",
+            "이미 승인된 외박은 취소할 수 없습니다.",
+            [{ text: "확인", style: "default" }]
+        );
+        return false;
+    }
+    
+    // 날짜가 이미 지난 경우
+    if (isPastDate) {
+        Alert.alert(
+            "취소 불가",
+            "이미 지난 날짜의 외박은 취소할 수 없습니다.",
+            [{ text: "확인", style: "default" }]
+        );
+        return false;
+    }
+    
+    // 오늘이고 시간이 23:30 이후인 경우
+    if (isToday(startDate) && isPastCurfewTime()) {
+        Alert.alert(
+            "취소 불가",
+            "오후 11시 30분 이후에는 당일 외박을 취소할 수 없습니다.",
+            [{ text: "확인", style: "default" }]
+        );
+        return false;
+    }
+    
+    return true;
+};
+
 // HTML에서 외박 리스트를 파싱하는 함수
 export const parseTripHistory = (htmlContent: string): TripItem[] => {
     try {
@@ -24,7 +154,7 @@ export const parseTripHistory = (htmlContent: string): TripItem[] => {
 
         // 정규식 패턴을 사용하여 필요한 데이터 추출
         const tripFormRegex =
-            /<form id="tripCancelForm" class="tripCancelForm" data-ajax="false">[\s\S]*?<\/form>/g;
+            /<form(?:[^>]*?)class="tripCancelForm"(?:[^>]*?)data-ajax="false"[\s\S]*?<\/form>/g;
         const tripForms = htmlContent.match(tripFormRegex);
 
         if (!tripForms) {
@@ -70,9 +200,9 @@ export const parseTripHistory = (htmlContent: string): TripItem[] => {
             const isApproved = form.includes(
                 "<font color=blue><b>외박신청이 승인되었습니다.</b></font>"
             );
-            const hasCancelButton =
-                form.includes('class="tripCancelBtn">신청취소</a>') &&
-                !form.includes("<!-- <a");
+            const hasCancelButton = 
+                form.includes('class="tripCancelBtn">신청취소</a>') ||
+                form.includes('class="tripCancelBtn" >신청취소</a>');
 
             // 상태에 따라 다르게 설정
             let status;

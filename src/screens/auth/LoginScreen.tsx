@@ -80,7 +80,7 @@ const LoginScreen: React.FC = () => {
 					setSnackbarVisible(true);
 
 					// 홈 화면으로 이동
-					navigation.navigate("Home");
+					navigation.navigate("Trip");
 				} else {
 					// 로그인 실패
 					setSnackbarMessage(
@@ -173,7 +173,7 @@ const LoginScreen: React.FC = () => {
 					{/* 푸터 메시지 추가 */}
 					<View style={styles.footerContainer}>
 						<Text style={styles.footerText}>
-							© 교원대학교 비공식 통합학사 시스템
+							교원대학교 비공식 통합학사 시스템
 						</Text>
 					</View>
 				</View>

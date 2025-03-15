@@ -66,7 +66,7 @@ const apiService = {
 	 */
 	postHTML: async (
 		endpoint: string,
-		data: any,
+		data: undefined,
 		config?: AxiosRequestConfig
 	) => {
 		try {

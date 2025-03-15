@@ -11,7 +11,8 @@ const getDefaultHeaders = () => ({
 	"cache-control": "no-cache",
 	origin: "https://mpot.knue.ac.kr",
 	"upgrade-insecure-requests": "1",
-	"user-agent": "acanet/knue",
+	"user-agent":
+		"Mozilla/5.0 (Linux; Android 5.1.1; SM-G977N Build/LMY48Z; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.136 Mobile Safari/537.36 acanet/knue",
 	accept:
 		"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
 	"accept-language": "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",

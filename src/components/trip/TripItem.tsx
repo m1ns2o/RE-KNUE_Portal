@@ -29,8 +29,8 @@ const TripItem: React.FC<TripItemProps> = ({ item, onCancelTrip }) => {
 					style={[styles.statusChip, { borderColor: statusColor }]}
 					textStyle={{
 						color: statusColor,
-						fontSize: 14,
-						lineHeight: 14,
+						fontSize: 10,
+						lineHeight: 10,
 						textAlign: "center",
 					}}
 				>

@@ -54,7 +54,7 @@ const SplashScreen = () => {
 		// 2초 후 로그인 상태 확인 (스플래시 화면 표시를 위한 딜레이)
 		const timer = setTimeout(() => {
 			checkLoginStatus();
-		}, 2000);
+		}, 100);
 
 		return () => clearTimeout(timer);
 	}, [navigation]);
