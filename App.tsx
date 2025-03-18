@@ -12,7 +12,7 @@ import { RootStackParamList } from "./src/types/navigation";
 // 화면 가져오기
 import LoginScreen from "./src/screens/auth/LoginScreen";
 import SplashScreen from "./src/screens/auth/SplashScreen";
-// import HomeScreen from "./src/screens/HomeScreen";
+import HomeScreen from "./src/screens/HomeScreen";
 import TripScreen from "./src/screens/menu/TripRequestScreen"
 
 // 앱의 진입점(예: index.js 또는 App.js)에 추가
@@ -48,7 +48,7 @@ export default function App() {
 					>
 						<Stack.Screen name="Splash" component={SplashScreen} />
 						<Stack.Screen name="Login" component={LoginScreen} />
-						{/* <Stack.Screen name="Home" component={HomeScreen} /> */}
+						<Stack.Screen name="Home" component={HomeScreen} />
 						<Stack.Screen name="Trip"	component={TripScreen}/>
 					</Stack.Navigator>
 				</NavigationContainer>

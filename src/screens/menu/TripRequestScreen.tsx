@@ -7,9 +7,6 @@ import { StackScreenProps } from "@react-navigation/stack";
 import axios, { AxiosError } from "axios";
 import { Alert } from "react-native";
 
-// API 서비스
-import apiService from "../../apis/apiService";
-
 // 화면 컴포넌트
 import TripRequestView from "../../components/trip/TripRequestView";
 
@@ -23,6 +20,7 @@ import {
 	validateTripCancelTime,
 } from "../../utils/tripUtils";
 import { RootStackParamList } from "../../types/navigation";
+import axiosInstance from "../../apis/axiosWithCookies";
 
 /**
  * 외박 신청 화면의 로직을 처리하는 컴포넌트
@@ -38,10 +36,13 @@ const TripRequestScreen: React.FC<TripScreenProps> = ({ navigation }) => {
 	});
 	const [open, setOpen] = useState<boolean>(false);
 	const [hakbeon, setHakbeon] = useState<string>("");
-	const [enteranceInfoSeq, setEnteranceInfoSeq] = useState<string>(""); // 추가: enteranceInfoSeq 상태
+	const [enteranceInfoSeq, setEnteranceInfoSeq] = useState<string>("");
 	const [loading, setLoading] = useState<boolean>(false);
 	const [tripList, setTripList] = useState<TripItem[]>([]);
 	const [listLoading, setListLoading] = useState<boolean>(false);
+
+	// API 기본 URL 설정
+	const BASE_URL = "https://mpot.knue.ac.kr";
 
 	// 날짜 초기화 함수
 	const resetDateRange = useCallback(() => {
@@ -57,8 +58,8 @@ const TripRequestScreen: React.FC<TripScreenProps> = ({ navigation }) => {
 			setLoading(true);
 
 			// 외박 신청 페이지 HTML 불러오기
-			const htmlData = await apiService.getHTML(
-				"/dormitory/student/trip?menuId=341&tab=1",
+			const response = await axiosInstance.get(
+				`${BASE_URL}/dormitory/student/trip?menuId=341&tab=1`,
 				{
 					headers: {
 						referer:
@@ -66,6 +67,8 @@ const TripRequestScreen: React.FC<TripScreenProps> = ({ navigation }) => {
 					},
 				}
 			);
+
+			const htmlData = response.data;
 
 			console.log(
 				"신청 페이지 HTML 데이터 길이:",
@@ -106,8 +109,8 @@ const TripRequestScreen: React.FC<TripScreenProps> = ({ navigation }) => {
 			setListLoading(true);
 
 			// HTML 응답 가져오기
-			const htmlData = await apiService.getHTML(
-				"/dormitory/student/trip?menuId=341&tab=2",
+			const response = await axiosInstance.get(
+				`${BASE_URL}/dormitory/student/trip?menuId=341&tab=2`,
 				{
 					headers: {
 						referer:
@@ -115,6 +118,8 @@ const TripRequestScreen: React.FC<TripScreenProps> = ({ navigation }) => {
 					},
 				}
 			);
+
+			const htmlData = response.data;
 
 			console.log("HTML 데이터 타입:", typeof htmlData);
 			console.log("HTML 데이터 길이:", htmlData ? htmlData.length : 0);
@@ -254,8 +259,8 @@ const TripRequestScreen: React.FC<TripScreenProps> = ({ navigation }) => {
 			console.log("제출할 데이터:", formData.toString());
 
 			// API 호출 및 HTML 응답 받기
-			const response = await apiService.post(
-				"/dormitory/student/trip/apply",
+			const response = await axiosInstance.post(
+				`${BASE_URL}/dormitory/student/trip/apply`,
 				formData.toString(),
 				{
 					headers: {
@@ -266,10 +271,12 @@ const TripRequestScreen: React.FC<TripScreenProps> = ({ navigation }) => {
 				}
 			);
 
+			const responseData = response.data;
+
 			// HTML 응답 파싱하여 외박 리스트 업데이트
-			if (response && typeof response === "string") {
+			if (responseData && typeof responseData === "string") {
 				// 외박 리스트 파싱
-				const tripData = parseTripHistory(response);
+				const tripData = parseTripHistory(responseData);
 				setTripList(tripData);
 
 				// 신청한 외박이 리스트에 있는지 확인
@@ -344,8 +351,8 @@ const TripRequestScreen: React.FC<TripScreenProps> = ({ navigation }) => {
 			console.log("취소 요청 데이터:", formData.toString());
 
 			// API 호출 및 HTML 응답 받기
-			const response = await apiService.post(
-				"/dormitory/student/trip/cancel?menuId=341",
+			const response = await axiosInstance.post(
+				`${BASE_URL}/dormitory/student/trip/cancel?menuId=341`,
 				formData.toString(),
 				{
 					headers: {
@@ -358,10 +365,12 @@ const TripRequestScreen: React.FC<TripScreenProps> = ({ navigation }) => {
 				}
 			);
 
+			const responseData = response.data;
+
 			// HTML 응답 파싱하여 외박 리스트 업데이트
-			if (response && typeof response === "string") {
+			if (responseData && typeof responseData === "string") {
 				// 외박 리스트 파싱
-				const tripData = parseTripHistory(response);
+				const tripData = parseTripHistory(responseData);
 				setTripList(tripData);
 
 				// 취소된 외박이 리스트에서 사라졌는지 확인
