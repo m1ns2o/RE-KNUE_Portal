@@ -1,4 +1,4 @@
-import axiosInstance, { parseHtmlResponse } from "../utils/axiosWithCookies";
+import axiosInstance from "../utils/axiosWithCookies";
 import { AxiosRequestConfig } from "axios";
 
 /**
@@ -50,7 +50,7 @@ const apiService = {
 				...config,
 				responseType: "text",
 			});
-			return parseHtmlResponse(response.data);
+			return response.data;
 		} catch (error) {
 			console.error(`HTML GET 요청 오류 (${endpoint}):`, error);
 			throw error;
@@ -74,7 +74,7 @@ const apiService = {
 				...config,
 				responseType: "text",
 			});
-			return parseHtmlResponse(response.data);
+			return response.data;
 		} catch (error) {
 			console.error(`HTML POST 요청 오류 (${endpoint}):`, error);
 			throw error;

@@ -15,6 +15,9 @@ import SplashScreen from "./src/screens/auth/SplashScreen";
 // import HomeScreen from "./src/screens/HomeScreen";
 import TripScreen from "./src/screens/menu/TripRequestScreen"
 
+// 앱의 진입점(예: index.js 또는 App.js)에 추가
+
+
 // 테마 정의 - #0090D6를 메인 컬러로 설정
 const theme = {
 	...DefaultTheme,

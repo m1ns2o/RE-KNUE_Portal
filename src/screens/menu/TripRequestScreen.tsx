@@ -130,7 +130,7 @@ const TripRequestScreen: React.FC<TripScreenProps> = ({ navigation }) => {
 				console.log("파싱된 데이터:", tripData.length, "개 항목");
 			} else {
 				console.log("외박 리스트 응답이 유효한 HTML이 아닙니다.");
-				console.log("응답 데이터:", htmlData);
+				// console.log("응답 데이터:", htmlData);
 				setTripList([]);
 			}
 		} catch (error) {
@@ -242,8 +242,8 @@ const TripRequestScreen: React.FC<TripScreenProps> = ({ navigation }) => {
 
 			// 폼 데이터 준비
 			const formData = new URLSearchParams();
-			formData.append("tripType", "2"); 
-			formData.append("tripTargetPlace", "1"); 
+			formData.append("tripType", "2");
+			formData.append("tripTargetPlace", "1");
 			formData.append("startDate", formattedStartDate);
 			formData.append("endDate", formattedEndDate);
 			formData.append("tripReason", "외박");
