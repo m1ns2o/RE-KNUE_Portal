@@ -25,13 +25,13 @@ const SplashScreen = () => {
 						// 로그인 성공 시 홈 화면으로 이동
 						navigation.reset({
 							index: 0,
-							routes: [{ name: "Trip" }],
+							routes: [{ name: "Home" }],
 						});
 					} else {
 						// 로그인 실패 시 로그인 화면으로 이동
 						navigation.reset({
 							index: 0,
-							routes: [{ name: "Login" }],
+							routes: [{ name: "Home" }],
 						});
 					}
 				} else {
