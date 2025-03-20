@@ -80,7 +80,7 @@ const LoginScreen: React.FC = () => {
 					setSnackbarVisible(true);
 
 					// 홈 화면으로 이동
-					navigation.navigate("Trip");
+					navigation.navigate("Home");
 				} else {
 					// 로그인 실패
 					setSnackbarMessage(

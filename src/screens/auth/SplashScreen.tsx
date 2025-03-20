@@ -31,7 +31,7 @@ const SplashScreen = () => {
 						// 로그인 실패 시 로그인 화면으로 이동
 						navigation.reset({
 							index: 0,
-							routes: [{ name: "Home" }],
+							routes: [{ name: "Login" }],
 						});
 					}
 				} else {
