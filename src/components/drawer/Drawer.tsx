@@ -17,7 +17,7 @@ import MenuItem, {
 	createMaterialCommunityIcon,
 	createMaterialIcon,
 } from "./MenuItem";
-import { red100 } from "react-native-paper/lib/typescript/styles/themes/v2/colors";
+import authService from "../../apis/authService";
 
 const { width } = Dimensions.get("window");
 const DRAWER_WIDTH = width * 0.8;
@@ -230,7 +230,10 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ visible, onDismiss }) => {
 				{/* 로그아웃 버튼 (하단에 고정) */}
 				<TouchableOpacity
 					style={styles.logoutButton}
-					onPress={() => navigateTo("Login")}
+					onPress={() => {
+						navigateTo("Login");
+						authService.logout();
+					}}
 				>
 					{createMaterialIcon("exit-to-app", "red")}
 					<Text style={styles.logoutText}>로그아웃</Text>
