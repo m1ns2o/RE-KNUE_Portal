@@ -5,14 +5,13 @@ import {
 	Animated,
 	TouchableWithoutFeedback,
 	Dimensions,
-	Text as RNText,
 	PanResponder,
 } from "react-native";
 import { useTheme, Divider, Text } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../../types/navigation";
-import MenuItem from "./MenuItem";
+import MenuItem, { createIoniconsIcon, createMaterialCommunityIcon, createMaterialIcon } from "./MenuItem";
 
 const { width } = Dimensions.get("window");
 const DRAWER_WIDTH = width * 0.8;
@@ -32,7 +31,7 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ visible, onDismiss }) => {
 	// 애니메이션 값
 	const translateX = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
 	const backdropOpacity = useRef(new Animated.Value(0)).current;
-	
+
 	// 드래그 상태 관리
 	const dragX = useRef(new Animated.Value(0)).current;
 
@@ -41,30 +40,29 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ visible, onDismiss }) => {
 		PanResponder.create({
 			// 터치 시작 시점에 항상 캡처
 			onStartShouldSetPanResponder: () => true,
-			
+
 			// 이동 시작 시점에 Pan Responder 활성화 여부 결정
 			onMoveShouldSetPanResponder: (_, gestureState) => {
 				// 왼쪽으로 스와이프하는 경우만 (dx가 음수) 캡처
 				return visible && gestureState.dx < -5;
 			},
-			
+
 			// 제스처 시작 시 초기화
 			onPanResponderGrant: () => {
 				// 현재 translateX 값을 초기 dragX로 설정
 				translateX.extractOffset();
 				dragX.setValue(0);
 			},
-			
+
 			// 드래그 중
-			onPanResponderMove: Animated.event(
-				[null, { dx: dragX }],
-				{ useNativeDriver: false }
-			),
-			
+			onPanResponderMove: Animated.event([null, { dx: dragX }], {
+				useNativeDriver: false,
+			}),
+
 			// 제스처 종료 시
 			onPanResponderRelease: (_, gestureState) => {
 				translateX.flattenOffset();
-				
+
 				// 충분히 왼쪽으로 스와이프했으면 드로어 닫기
 				if (gestureState.dx < -SWIPE_THRESHOLD) {
 					onDismiss();
@@ -77,7 +75,7 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ visible, onDismiss }) => {
 					}).start();
 				}
 			},
-			
+
 			// 제스처 취소 시
 			onPanResponderTerminate: () => {
 				// 원래 위치로 복귀
@@ -96,13 +94,13 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ visible, onDismiss }) => {
 			// 왼쪽으로만 이동하도록 제한 (값이 음수일 때만)
 			if (value <= 0) {
 				translateX.setValue(value);
-				
+
 				// translateX에 따라 배경 투명도 조정
 				const newOpacity = 1 - Math.min(1, Math.abs(value) / DRAWER_WIDTH);
 				backdropOpacity.setValue(newOpacity);
 			}
 		});
-		
+
 		return () => {
 			dragX.removeListener(id);
 		};
@@ -183,12 +181,16 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ visible, onDismiss }) => {
 						<Text style={styles.sectionTitle}>메뉴</Text>
 					</View>
 
-					<MenuItem icon="home" label="홈" onPress={() => navigateTo("Home")} />
+					{/* <MenuItem
+						leftIcon={createIoniconsIcon("home", theme.colors.primary)}
+						label="홈"
+						onPress={() => navigateTo("Home")}
+					/> */}
 
 					<Divider style={styles.divider} />
 
 					<MenuItem
-						icon="flight"
+						leftIcon={createIoniconsIcon("beer", theme.colors.primary)}
 						label="외박 신청"
 						onPress={() => navigateTo("Trip")}
 					/>
@@ -196,8 +198,14 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ visible, onDismiss }) => {
 					<Divider style={styles.divider} />
 
 					<MenuItem
-						icon="history"
-						label="외박 내역"
+						leftIcon={createMaterialCommunityIcon("silverware-fork-knife", theme.colors.primary)}
+						label="식단표"
+						onPress={() => navigateTo("Trip")}
+					/>
+
+					<MenuItem
+						leftIcon={createMaterialIcon("directions-bus", theme.colors.primary)}
+						label="버스 시간표"
 						onPress={() => navigateTo("Trip")}
 					/>
 				</View>
@@ -209,7 +217,7 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ visible, onDismiss }) => {
 					</View>
 
 					<MenuItem
-						icon="exit-to-app"
+						leftIcon={createMaterialIcon("exit-to-app", theme.colors.primary)}
 						label="로그아웃"
 						onPress={() => navigateTo("Login")}
 					/>
