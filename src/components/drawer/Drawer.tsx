@@ -4,6 +4,7 @@ import {
 	View,
 	Animated,
 	TouchableWithoutFeedback,
+	TouchableOpacity,
 	Dimensions,
 	PanResponder,
 } from "react-native";
@@ -11,7 +12,12 @@ import { useTheme, Divider, Text } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../../types/navigation";
-import MenuItem, { createIoniconsIcon, createMaterialCommunityIcon, createMaterialIcon } from "./MenuItem";
+import MenuItem, {
+	createIoniconsIcon,
+	createMaterialCommunityIcon,
+	createMaterialIcon,
+} from "./MenuItem";
+import { red100 } from "react-native-paper/lib/typescript/styles/themes/v2/colors";
 
 const { width } = Dimensions.get("window");
 const DRAWER_WIDTH = width * 0.8;
@@ -175,53 +181,60 @@ const PaperDrawer: React.FC<PaperDrawerProps> = ({ visible, onDismiss }) => {
 					{/* <Text style={styles.headerTitle}>메뉴</Text> */}
 				</View>
 
-				{/* 메뉴 섹션 1 */}
-				<View style={styles.menuSection}>
-					<View style={styles.sectionHeader}>
-						<Text style={styles.sectionTitle}>메뉴</Text>
+				{/* 메뉴 섹션 */}
+				<View style={styles.drawerContent}>
+					{/* 메뉴 섹션 1 */}
+					<View style={styles.menuSection}>
+						<View style={styles.sectionHeader}>
+							<Text style={styles.sectionTitle}>메뉴</Text>
+						</View>
+
+						{/* <MenuItem
+							leftIcon={createIoniconsIcon("home", theme.colors.primary)}
+							label="홈"
+							onPress={() => navigateTo("Home")}
+						/> */}
+
+						<Divider style={styles.divider} />
+
+						<MenuItem
+							leftIcon={createIoniconsIcon("beer", theme.colors.primary)}
+							label="외박 신청"
+							onPress={() => navigateTo("Trip")}
+						/>
+
+						<Divider style={styles.divider} />
+
+						<MenuItem
+							leftIcon={createMaterialCommunityIcon(
+								"silverware-fork-knife",
+								theme.colors.primary
+							)}
+							label="식단표"
+							onPress={() => navigateTo("Meal")}
+						/>
+
+						<MenuItem
+							leftIcon={createMaterialIcon(
+								"directions-bus",
+								theme.colors.primary
+							)}
+							label="버스 시간표"
+							onPress={() => navigateTo("Trip")}
+						/>
 					</View>
 
-					{/* <MenuItem
-						leftIcon={createIoniconsIcon("home", theme.colors.primary)}
-						label="홈"
-						onPress={() => navigateTo("Home")}
-					/> */}
-
-					<Divider style={styles.divider} />
-
-					<MenuItem
-						leftIcon={createIoniconsIcon("beer", theme.colors.primary)}
-						label="외박 신청"
-						onPress={() => navigateTo("Trip")}
-					/>
-
-					<Divider style={styles.divider} />
-
-					<MenuItem
-						leftIcon={createMaterialCommunityIcon("silverware-fork-knife", theme.colors.primary)}
-						label="식단표"
-						onPress={() => navigateTo("Trip")}
-					/>
-
-					<MenuItem
-						leftIcon={createMaterialIcon("directions-bus", theme.colors.primary)}
-						label="버스 시간표"
-						onPress={() => navigateTo("Trip")}
-					/>
+					{/* "계정" 섹션 완전히 삭제 */}
 				</View>
 
-				{/* 메뉴 섹션 2 */}
-				<View style={styles.menuSection}>
-					<View style={styles.sectionHeader}>
-						<Text style={styles.sectionTitle}>계정</Text>
-					</View>
-
-					<MenuItem
-						leftIcon={createMaterialIcon("exit-to-app", theme.colors.primary)}
-						label="로그아웃"
-						onPress={() => navigateTo("Login")}
-					/>
-				</View>
+				{/* 로그아웃 버튼 (하단에 고정) */}
+				<TouchableOpacity
+					style={styles.logoutButton}
+					onPress={() => navigateTo("Login")}
+				>
+					{createMaterialIcon("exit-to-app", "red")}
+					<Text style={styles.logoutText}>로그아웃</Text>
+				</TouchableOpacity>
 			</Animated.View>
 		</Animated.View>
 	);
@@ -251,6 +264,11 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.25,
 		shadowRadius: 3.84,
 		elevation: 5,
+		flexDirection: "column",
+		justifyContent: "space-between",
+	},
+	drawerContent: {
+		flex: 1,
 	},
 	header: {
 		padding: 16,
@@ -278,6 +296,31 @@ const styles = StyleSheet.create({
 	divider: {
 		height: 0.5,
 		backgroundColor: "#EEEEEE",
+	},
+	logoutButton: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		backgroundColor: "#FFFFFF",
+		padding: 12,
+		marginTop: 8,
+		marginBottom: 24,
+		borderRadius: 24,
+		marginHorizontal: 40,
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 1,
+		},
+		shadowOpacity: 0.22,
+		shadowRadius: 2.22,
+		elevation: 1,
+	},
+	logoutText: {
+		color: "red",
+		// fontWeight: "bold",
+		fontSize: 16,
+		marginLeft: 8,
 	},
 });
 
